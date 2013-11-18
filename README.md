@@ -1,4 +1,4 @@
-Video consentration!
+Capsulized videos!
 
 Main program is opticalflowstitching and a helper graph making program
 is called shotanalysis.
