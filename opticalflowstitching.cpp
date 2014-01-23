@@ -1,6 +1,10 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/stitching/detail/blenders.hpp"
 #include <iostream>
+#include <fstream>
+#include <math.h>
+
+#define PI 3.14159265
 
 using namespace cv;
 using namespace cv::detail;
@@ -40,9 +44,8 @@ vector<Point2f> minusPoints(vector<Point2f> prevPoints, vector<Point2f> nextPoin
   return newVectors;
 }
 
-Mat differenceBlendJointArea(Mat baseImage, Mat imageToBlend, Point2f vector, Mat baseBackground)
+Mat differenceBlendJointArea(Mat baseImage, Mat imageToBlend, Point2f vector, Mat baseBackground, double alpha)
 {
-  double alpha = 0.5; // how hard the change is blended to image
   Rect imageRect = Rect(0,0,imageToBlend.cols, imageToBlend.rows) & (Rect(0,0,imageToBlend.cols, imageToBlend.rows) + Point(vector.x, vector.y));
   Rect baseRect = Rect(0,0,imageToBlend.cols, imageToBlend.rows) & (Rect(0,0,imageToBlend.cols, imageToBlend.rows) - Point(vector.x, vector.y));
 
@@ -68,6 +71,8 @@ Mat differenceBlendJointArea(Mat baseImage, Mat imageToBlend, Point2f vector, Ma
         diff = diff<30?0:diff;
         int diffMult = std::min(1,diff);
         baseROI.at<Vec3b>(y,x)[channel] = (int)(diffMult*alpha*B + diffMult*(1-alpha)*A + (1-diffMult)*A);
+        //baseROI.at<Vec3b>(y,x)[channel] = (int)((1-0.1)*A + 0.1*B);
+
         //Different blending methods that can be found from photoshop.
         //Best that is in use is plain alpha blend for diffed image
 
@@ -84,8 +89,28 @@ Mat differenceBlendJointArea(Mat baseImage, Mat imageToBlend, Point2f vector, Ma
   return baseImage;
 }
 
+double calculateAlphaFromDistanceOfInterestPoint(int x, int length)
+{
+  int waveLen = 20;
+  double A=0, B=0;
+  if(length == 0)
+    return 0;
+
+  if(x<waveLen)
+  {
+    A = 0.5 * double(cos(PI*double(x)/waveLen)+1)/2;
+  }
+
+  if(x>(length-waveLen))
+  {
+    B = 0.5 * double(sin(PI*double(x-(length-waveLen))/waveLen)+1)/2;
+  }
+
+  return std::max(A,B);
+}
+
 Mat blendImagesWithDisplacement(Mat baseImage, Mat baseImageMask,
-    Mat imageToBlend, Point2f* displacementVector, Mat baseBackground)
+    Mat imageToBlend, Point2f* displacementVector, Mat baseBackground, int x, int length)
 {
   //make large enough base image
   Mat outImage(baseImage.rows+abs(displacementVector->y), baseImage.cols+abs(displacementVector->x),CV_8UC3);
@@ -96,13 +121,41 @@ Mat blendImagesWithDisplacement(Mat baseImage, Mat baseImageMask,
   Mat baseRoi(outImage, baseImageRect);
   imageToBlend.copyTo(blendingRoi);
   baseImage.copyTo(baseRoi);
+  //calc alpha
+  double alpha = calculateAlphaFromDistanceOfInterestPoint(x,length);
   //blend
-  outImage = differenceBlendJointArea(outImage, imageToBlend, *displacementVector, baseBackground);
+  outImage = differenceBlendJointArea(outImage, imageToBlend, *displacementVector, baseBackground, alpha);
   //save the position of latest image
   displacementVector->x = std::max(displacementVector->x, 0.f);
   displacementVector->y = std::max(displacementVector->y, 0.f);
   return outImage;
 }
+
+
+std::vector<int> getInterestPointsFromFileAndCalculateLengths(std::string filename)
+{
+  std::ifstream xInFile(filename.c_str());
+  vector<int> numbers;
+  if(!xInFile){
+    return numbers;
+  }
+
+  std::string line;
+  int result = 0;
+  int lastResult = 0;
+  while(std::getline(xInFile, line)) {
+    std::stringstream convert(line);
+    if( (convert >> result) )
+    {
+      numbers.push_back(result - lastResult);
+      lastResult = result;
+    }
+  }
+  std::reverse(numbers.begin(), numbers.end());
+  xInFile.close();
+  return numbers;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -117,6 +170,16 @@ int main(int argc, char* argv[])
     std::cout << "failed to load" << std::endl;
     return -1;
   }
+
+  //init interesting frame positions from file
+  vector<int> intLengths = getInterestPointsFromFileAndCalculateLengths("bin/points.txt");
+  for (std::vector<int>::iterator it = intLengths.begin(); it != intLengths.end(); ++it)
+      std::cout << *it << std::endl;
+  int a = 0;
+  bool lastFade = false;
+  int lastPop = intLengths.back();
+  intLengths.pop_back();
+
   TermCriteria termcrit(TermCriteria::COUNT|TermCriteria::EPS,20,0.03);
   Mat frame, prevFrame, nextFrame;
   vector<uchar> featuresFound;
@@ -137,6 +200,7 @@ int main(int argc, char* argv[])
 
   for(int i=0;;i++)
   {
+    a++;
     // new frame
     cap >> frame;
     if(frame.empty())
@@ -153,11 +217,25 @@ int main(int argc, char* argv[])
       Point2f common = getMostCommonVector(minusPoints(prevPoints, nextPoints), featuresFound);
       if(norm(common)>0.5)
       {
+        std::cout<<norm(common)<<std::endl;
         frame.copyTo(baseBackground);
       }
       displacementSum -= common;
       //blend two images to one
-      stitchedImage = blendImagesWithDisplacement(stitchedImage, stitchedImageMask, frame, &displacementSum, baseBackground);
+      stitchedImage = blendImagesWithDisplacement(stitchedImage, stitchedImageMask, frame, &displacementSum, baseBackground, a, lastPop);
+      if(a>=lastPop && intLengths.size()>0)
+      {
+        a = 0;
+        lastPop = intLengths.back();
+        intLengths.pop_back();
+      }else if(intLengths.size()<1 && lastFade == false)
+      {
+        //no more interesting points, search final frame and fade into that
+        int totalFrameCount = cap.get(CV_CAP_PROP_FRAME_COUNT);
+        a = 0;
+        lastPop = totalFrameCount - i;
+        lastFade = true;
+      }
       imshow("activeImage", stitchedImage);
       //imshow("activeFrame", frame);
       //imshow("activeBackground", baseBackground);
@@ -167,7 +245,7 @@ int main(int argc, char* argv[])
       vector<Point2f> prevPoints(nextPoints);
       nextFrame.copyTo(prevFrame);
     }else{ 
-      char key = waitKey(30);
+      char key = waitKey(10);
       if(key == 'n')
       {
         string windowName = "last result lasting to" + i;
@@ -178,6 +256,7 @@ int main(int argc, char* argv[])
         break;
     }
   }
+  //imshow("result", stitchedImage);
   waitKey();
   return 0;
 }

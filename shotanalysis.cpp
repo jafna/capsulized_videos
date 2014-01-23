@@ -83,7 +83,7 @@ Mat updateGraph(vector<double> movementDifference, vector<double> histogramDiffe
   Mat updatedGraph(510,1024,CV_8UC3);
   updatedGraph = Scalar(255,255,255);
   drawGraphToImage(updatedGraph, movementDifference, Scalar(255,0,255));
-//  drawGraphToImage(updatedGraph, histogramDifference, Scalar(255,0,0));
+  //drawGraphToImage(updatedGraph, histogramDifference, Scalar(255,0,0));
   return updatedGraph;
 }
 
@@ -188,6 +188,9 @@ int main(int argc, char* argv[])
       if(key == ' ')
       {
         waitKey();
+      }if(key == 'b')
+      {
+        std::cout << i << std::endl;
       }else if(key>=0){
         break;
       }
