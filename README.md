@@ -1,8 +1,7 @@
 Capsulized videos!
 ==================
 
-Main program is opticalflowstitching and a helper graph-making-program
-is shotanalysis.
+This is the code for my bachelors work at Aalto University.
 
 Capsulation is divided to two programs: shotAnalysis and opticalFlowStitching.
 Shot analyse separates different shots of a video for the stitcher-program.
