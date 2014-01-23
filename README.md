@@ -12,7 +12,7 @@ Compile:
 + make shotanalysis
 + make stitching
 
-To compile you need newest version of opencv!
+To compile you need the newest version of opencv!
 ( For Ubuntu check https://help.ubuntu.com/community/OpenCV )
 
 Example case
