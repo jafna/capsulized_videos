@@ -22,7 +22,7 @@ Example video is viewable at http://youtu.be/0Kjki0VJf1E
 ![Motion detected from example video](http://granite.dy.fi/jafna/kandipics/graafimotion.png "Motion detected from example video")
 Image represents graphical output of the shotAnalysis program for example video. Large spikes on the graph show the shot boundaries.
 
-Stitcher makes representative images for each shot detected.
+### Stitcher makes representative images for each shot detected.
 ![Because camera moves in first shot, resulting image is panorama](http://granite.dy.fi/jafna/kandipics/shot1.png)
 When camera moves, resulting image is a panorama.
 
