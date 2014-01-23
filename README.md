@@ -24,9 +24,11 @@ Shotanalysis graphical output for example video
 Motion spikes on the graph shows the shot boundaries.
 
 Stitcher makes representative images for each shot detected.
-![Because camera moves in first shot, resulting image is panorama](http://granite.dy.fi/jafna/kandipics/shot1.png "Because camera moves in first shot, resulting image is panorama")
+![Because camera moves in first shot, resulting image is panorama](http://granite.dy.fi/jafna/kandipics/shot1.png)
+Because camera moves in first shot, resulting image is panorama
 
-![Detected moving objects are blended to the final image](http://granite.dy.fi/jafna/kandipics/shot2.png "Detected moving objects are blended to the final image")
+![Detected moving objects are blended to the final image](http://granite.dy.fi/jafna/kandipics/shot2.png)
+Detected moving objects are blended to the final image
 
-![In last shot movement was too small so only 1 frame was selected from shot](http://granite.dy.fi/jafna/kandipics/shot3.png "In last shot movement was too small so only 1 frame was selected from shot")
-
+![In last shot movement was too small so only 1 frame was selected from shot](http://granite.dy.fi/jafna/kandipics/shot3.png)
+In last shot movement was too small so only 1 frame was selected from shot
