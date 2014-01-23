@@ -19,16 +19,15 @@ Example case
 ------------
 Example video is viewable at http://youtu.be/0Kjki0VJf1E
 
-Shotanalysis graphical output for example video
 ![Motion detected from example video](http://granite.dy.fi/jafna/kandipics/graafimotion.png "Motion detected from example video")
-Motion spikes on the graph shows the shot boundaries.
+Image represents graphical output of the shotAnalysis program for example video. Large spikes on the graph show the shot boundaries.
 
 Stitcher makes representative images for each shot detected.
 ![Because camera moves in first shot, resulting image is panorama](http://granite.dy.fi/jafna/kandipics/shot1.png)
-Because camera moves in first shot, resulting image is panorama
+When camera moves, resulting image is a panorama.
 
 ![Detected moving objects are blended to the final image](http://granite.dy.fi/jafna/kandipics/shot2.png)
-Detected moving objects are blended to the final image
+Detected moving objects are blended on top of each other.
 
 ![In last shot movement was too small so only 1 frame was selected from shot](http://granite.dy.fi/jafna/kandipics/shot3.png)
-In last shot movement was too small so only 1 frame was selected from shot
+In last shot movement was too small so only one frame was selected.
